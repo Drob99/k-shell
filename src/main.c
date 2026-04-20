@@ -5,6 +5,8 @@
 int main(void) {
     char prompt[KS_INPUT_MAX];
     char line[KS_INPUT_MAX];
+    char *argv[KS_MAX_ARGS + 1];
+    int argc;
 
     while (1) {
         ks_render_prompt(prompt, sizeof(prompt));
@@ -30,6 +32,20 @@ int main(void) {
             continue;
         }
 
-        printf("got: %s\n", line);
+        int ret = ks_parse_line(line, argv, &argc);
+        if (ret == KS_ERR_TOO_MANY_ARGS) {
+            fprintf(stderr, "kshell: too many arguments (max %d)\n", KS_MAX_ARGS);
+            continue;
+        }
+
+        if (argc == 0) {
+            continue;
+        }
+
+        printf("parsed %d token%s:", argc, argc == 1 ? "" : "s");
+        for (int i = 0; i < argc; i++) {
+            printf(" [%s]", argv[i]);
+        }
+        putchar('\n');
     }
 }

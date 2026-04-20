@@ -10,7 +10,8 @@
 #define KS_ERR_PARSE   -1
 #define KS_ERR_EXEC    -2
 #define KS_ERR_BUILTIN -3
-#define KS_ERR_HISTORY -4
+#define KS_ERR_HISTORY      -4
+#define KS_ERR_TOO_MANY_ARGS -5
 
 /* --------------------------------------------------------------------------
  * Limits
@@ -34,7 +35,8 @@
  * @param argv  Caller-supplied array of at least KS_ARGS_MAX+1 pointers;
  *              on success argv[*argc] is set to NULL.
  * @param argc  Output: number of tokens found.
- * @return KS_OK on success, KS_ERR_PARSE if too many tokens or line is NULL.
+ * @return KS_OK on success; KS_ERR_PARSE if line, argv, or argc is NULL;
+ *         KS_ERR_TOO_MANY_ARGS if the token count exceeds KS_MAX_ARGS.
  * @note Ownership of argv entries belongs to the caller's line buffer.
  */
 int ks_parse_line(char *line, char **argv, int *argc);
