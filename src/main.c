@@ -1,8 +1,26 @@
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "kshell.h"
 
+/* SIGINT is delivered to the whole foreground process group. The child's
+ * default handler kills it; this handler lets the shell survive by just
+ * re-prompting. No setpgid needed because we don't require full job-control
+ * groups. */
+static void sigint_handler(int sig) {
+    (void)sig;
+    write(1, "\n", 1); /* async-signal-safe; printf/fprintf are not */
+}
+
 int main(void) {
+    struct sigaction sa;
+    sa.sa_handler = sigint_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; /* NOT SA_RESTART: fgets must return EINTR so we can re-prompt */
+    sigaction(SIGINT, &sa, NULL);
+
     if (ks_history_init(KS_HISTORY_MAX) != KS_OK) {
         fprintf(stderr, "kshell: failed to initialize history\n");
         return 1;
@@ -18,8 +36,17 @@ int main(void) {
         fputs(prompt, stdout);
         fflush(stdout);
 
+        errno = 0;
         if (fgets(line, sizeof(line), stdin) == NULL) {
-            putchar('\n');
+            if (feof(stdin)) {
+                putchar('\n');
+                break;          /* Ctrl+D: exit cleanly */
+            }
+            if (errno == EINTR) {
+                clearerr(stdin);
+                continue;       /* Ctrl+C: re-prompt */
+            }
+            perror("kshell: fgets");
             break;
         }
 
