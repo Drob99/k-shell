@@ -26,3 +26,10 @@ USAGE_DEMO.md
 
 # local AI assistant context, not for submission
 CLAUDE.md
+
+# report build artifacts (Eisvogel template archive and extracted folder)
+report/eisvogel.tar.gz
+report/Eisvogel-3.4.0/
+
+# editor-specific
+.vscode/
