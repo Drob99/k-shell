@@ -52,10 +52,13 @@ int main(void) {
 
         char *nl = strchr(line, '\n');
         if (nl == NULL) {
-            /* Input exceeded KS_INPUT_MAX-1: drain the rest silently. */
+            /* Input exceeded KS_INPUT_MAX-1: warn, drain, and re-prompt. */
+            fprintf(stderr, "kshell: input too long (max %d chars), truncated\n",
+                    KS_INPUT_MAX - 1);
             int c;
             while ((c = getchar()) != '\n' && c != EOF)
                 ;
+            continue;
         } else {
             *nl = '\0';
         }
