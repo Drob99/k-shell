@@ -1,0 +1,22 @@
+# Compiled objects and binaries
+*.o
+*.a
+kshell
+kshell-asan
+tests/test_parser
+
+# macOS debug symbols
+*.dSYM/
+
+# AddressSanitizer logs
+asan.log*
+asan_output*
+
+# Editor and OS clutter
+.DS_Store
+*.swp
+*.swo
+*~
+
+# local AI assistant context, not for submission
+CLAUDE.md
