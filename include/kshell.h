@@ -1,6 +1,8 @@
 #ifndef KSHELL_H
 #define KSHELL_H
 
+#include <stddef.h>
+
 /* --------------------------------------------------------------------------
  * Status codes
  * -------------------------------------------------------------------------- */
@@ -14,7 +16,7 @@
  * Limits
  * -------------------------------------------------------------------------- */
 #define KS_INPUT_MAX   1024
-#define KS_ARGS_MAX      64
+#define KS_MAX_ARGS      64
 #define KS_HISTORY_MAX  100
 
 /* --------------------------------------------------------------------------
@@ -172,12 +174,18 @@ void ks_history_free(void);
  * -------------------------------------------------------------------------- */
 
 /**
- * @brief Print the shell prompt (current working directory followed by "$ ")
- *        to stdout without a trailing newline.
+ * @brief Render the shell prompt into @p buf as "kshell:<cwd>$ ".
  *
+ * Uses getcwd to obtain the current directory. If the path begins with
+ * $HOME (and the next character is '/' or '\0'), that prefix is replaced
+ * with '~'. If getenv("HOME") returns NULL the raw cwd is used. If getcwd
+ * fails the buffer is set to "kshell:?$ ".
+ *
+ * @param buf     Destination buffer for the rendered prompt string.
+ * @param buflen  Size of @p buf in bytes.
  * @return KS_OK on success, KS_ERR_EXEC if getcwd fails.
- * @note Falls back to printing "? $ " if the CWD cannot be determined.
+ * @note Caller owns @p buf; no allocation is performed.
  */
-int ks_prompt_print(void);
+int ks_render_prompt(char *buf, size_t buflen);
 
 #endif /* KSHELL_H */
