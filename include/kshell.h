@@ -6,16 +6,16 @@
 /* --------------------------------------------------------------------------
  * Status codes
  * -------------------------------------------------------------------------- */
-#define KS_OK           0
-#define KS_ERR_PARSE   -1
-#define KS_ERR_EXEC    -2
-#define KS_ERR_BUILTIN -3
-#define KS_ERR_HISTORY       -4
+#define KS_OK                0
+#define KS_ERR_PARSE        -1
+#define KS_ERR_EXEC         -2
+#define KS_ERR_BUILTIN      -3
+#define KS_ERR_HISTORY      -4
 #define KS_ERR_TOO_MANY_ARGS -5
-#define KS_CMD_NOT_FOUND     -6
-#define KS_ERR_FORK          -7
+#define KS_CMD_NOT_FOUND    -6
+#define KS_ERR_FORK         -7
 /* KS_EXIT is a positive sentinel, not an error: signals clean shell termination. */
-#define KS_EXIT               1
+#define KS_EXIT              1
 
 /* --------------------------------------------------------------------------
  * Limits
@@ -36,7 +36,7 @@
  * free them individually.
  *
  * @param line  NUL-terminated input string to tokenize (modified in-place).
- * @param argv  Caller-supplied array of at least KS_ARGS_MAX+1 pointers;
+ * @param argv  Caller-supplied array of at least KS_MAX_ARGS+1 pointers;
  *              on success argv[*argc] is set to NULL.
  * @param argc  Output: number of tokens found.
  * @return KS_OK on success; KS_ERR_PARSE if line, argv, or argc is NULL;
@@ -75,9 +75,10 @@ int ks_dispatch(int argc, char **argv);
  * @brief Execute an external command via fork/execvp/waitpid.
  *
  * @param argv  NULL-terminated argument vector; argv[0] is the program name.
- * @return KS_OK on success (child exited 0), KS_ERR_EXEC on fork/exec failure
- *         or non-zero child exit.
- * @note Preserves errno from the failing syscall; prints error via perror.
+ * @return KS_OK on success or non-zero child exit (child exit status is stored
+ *         internally); KS_ERR_FORK if fork() fails; KS_ERR_EXEC if waitpid()
+ *         fails. Child error messages are printed from within the child process.
+ * @note Non-zero child exit is not treated as a shell error.
  */
 int ks_execute(char **argv);
 

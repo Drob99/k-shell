@@ -11,8 +11,6 @@ int ks_builtin_exit_code(void) {
 }
 
 int ks_builtin_cd(int argc, char **argv) {
-    (void)argv;
-
     if (argc > 2) {
         fprintf(stderr, "kshell: cd: too many arguments\n");
         return KS_ERR_BUILTIN;
