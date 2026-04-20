@@ -10,8 +10,11 @@
 #define KS_ERR_PARSE   -1
 #define KS_ERR_EXEC    -2
 #define KS_ERR_BUILTIN -3
-#define KS_ERR_HISTORY      -4
+#define KS_ERR_HISTORY       -4
 #define KS_ERR_TOO_MANY_ARGS -5
+#define KS_CMD_NOT_FOUND     -6
+/* KS_EXIT is a positive sentinel, not an error: signals clean shell termination. */
+#define KS_EXIT               1
 
 /* --------------------------------------------------------------------------
  * Limits
@@ -49,11 +52,15 @@ int ks_parse_line(char *line, char **argv, int *argc);
  * @brief Route a parsed command to the appropriate built-in or executor.
  *
  * Checks argv[0] against the known built-in names; if matched, calls the
- * corresponding ks_builtin_* function. Otherwise calls ks_execute().
+ * corresponding ks_builtin_* function. Otherwise returns KS_CMD_NOT_FOUND.
  *
- * @param argc  Number of arguments (must be >= 1).
+ * @param argc  Number of tokens (0 is valid: returns KS_OK immediately).
  * @param argv  NULL-terminated argument vector; argv[0] is the command name.
- * @return KS_OK on success, or a KS_ERR_* code on failure.
+ * @return KS_OK if the command succeeded or input was empty;
+ *         KS_EXIT if the built-in signals clean shell termination;
+ *         KS_CMD_NOT_FOUND if argv[0] is not a known built-in;
+ *         KS_ERR_BUILTIN if a built-in reports a usage or runtime error;
+ *         KS_ERR_TOO_MANY_ARGS if argument limits were exceeded.
  * @note Does not free argv; ownership remains with the caller.
  */
 int ks_dispatch(int argc, char **argv);
@@ -89,15 +96,25 @@ int ks_execute(char **argv);
 int ks_builtin_cd(int argc, char **argv);
 
 /**
- * @brief Terminate the shell process.
+ * @brief Signal the shell to terminate.
  *
- * Calls ks_history_free() before exiting to release resources cleanly.
+ * Stores the optional exit code via the module-static g_exit_code
+ * (retrievable with ks_builtin_exit_code()). Does NOT call exit() itself;
+ * the caller (main) is responsible for cleanup and the actual exit call.
  *
- * @param argc  Argument count (ignored).
- * @param argv  Argument vector (ignored beyond argv[0]).
- * @return Does not return; calls exit(0).
+ * @param argc  1 = exit with code 0; 2 = exit with atoi(argv[1]);
+ *              > 2 prints an error to stderr and returns KS_ERR_BUILTIN.
+ * @param argv  Argument vector; argv[0] is "exit".
+ * @return KS_EXIT on success, KS_ERR_BUILTIN if argc > 2.
  */
 int ks_builtin_exit(int argc, char **argv);
+
+/**
+ * @brief Return the exit code set by the most recent ks_builtin_exit call.
+ *
+ * @return Exit code (default 0 if ks_builtin_exit was never called).
+ */
+int ks_builtin_exit_code(void);
 
 /**
  * @brief Print a summary of available built-in commands to stdout.

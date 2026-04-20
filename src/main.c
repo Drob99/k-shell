@@ -15,7 +15,7 @@ int main(void) {
 
         if (fgets(line, sizeof(line), stdin) == NULL) {
             putchar('\n');
-            return 0;
+            break;
         }
 
         char *nl = strchr(line, '\n');
@@ -32,20 +32,21 @@ int main(void) {
             continue;
         }
 
-        int ret = ks_parse_line(line, argv, &argc);
-        if (ret == KS_ERR_TOO_MANY_ARGS) {
+        if (ks_parse_line(line, argv, &argc) == KS_ERR_TOO_MANY_ARGS) {
             fprintf(stderr, "kshell: too many arguments (max %d)\n", KS_MAX_ARGS);
             continue;
         }
 
-        if (argc == 0) {
-            continue;
-        }
+        int ret = ks_dispatch(argc, argv);
 
-        printf("parsed %d token%s:", argc, argc == 1 ? "" : "s");
-        for (int i = 0; i < argc; i++) {
-            printf(" [%s]", argv[i]);
+        if (ret == KS_EXIT) {
+            break;
+        } else if (ret == KS_CMD_NOT_FOUND) {
+            fprintf(stderr, "kshell: command not found: %s\n", argv[0]);
         }
-        putchar('\n');
+        /* ret < 0 (other errors): builtin already printed its message; re-prompt. */
     }
+
+    ks_history_free();
+    return ks_builtin_exit_code();
 }
