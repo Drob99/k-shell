@@ -35,9 +35,13 @@ int ks_execute(char **argv) {
 
     /* Parent */
     int status;
-    if (waitpid(pid, &status, 0) == -1) {
-        perror("kshell: waitpid");
-        return KS_ERR_EXEC;
+    while (waitpid(pid, &status, 0) == -1)
+    {
+        if (errno != EINTR)
+        {
+            perror("kshell: waitpid");
+            return KS_ERR_EXEC;
+        }
     }
 
     if (WIFEXITED(status)) {
