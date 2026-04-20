@@ -63,5 +63,9 @@ int ks_builtin_help(int argc, char **argv) {
 int ks_builtin_history(int argc, char **argv) {
     (void)argc;
     (void)argv;
+    int n = ks_history_count();
+    for (int i = 0; i < n; i++) {
+        printf("%5d  %s\n", i + 1, ks_history_get(i));
+    }
     return KS_OK;
 }

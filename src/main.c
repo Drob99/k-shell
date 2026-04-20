@@ -3,6 +3,11 @@
 #include "kshell.h"
 
 int main(void) {
+    if (ks_history_init(KS_HISTORY_MAX) != KS_OK) {
+        fprintf(stderr, "kshell: failed to initialize history\n");
+        return 1;
+    }
+
     char prompt[KS_INPUT_MAX];
     char line[KS_INPUT_MAX];
     char *argv[KS_MAX_ARGS + 1];
@@ -31,6 +36,8 @@ int main(void) {
         if (line[0] == '\0') {
             continue;
         }
+
+        ks_history_add(line);
 
         if (ks_parse_line(line, argv, &argc) == KS_ERR_TOO_MANY_ARGS) {
             fprintf(stderr, "kshell: too many arguments (max %d)\n", KS_MAX_ARGS);

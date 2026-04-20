@@ -145,11 +145,15 @@ int ks_builtin_history(int argc, char **argv);
 /**
  * @brief Initialize the in-memory history ring buffer.
  *
- * Must be called once before any other ks_history_* function.
+ * Must be called exactly once before any other ks_history_* function.
+ * Calling a second time without an intervening ks_history_free() is an
+ * error and returns KS_ERR_HISTORY.
  *
- * @note No return value; always succeeds.
+ * @param capacity  Maximum number of entries to store (must be > 0).
+ * @return KS_OK on success; KS_ERR_HISTORY if already initialized,
+ *         capacity is 0, or memory allocation fails.
  */
-void ks_history_init(void);
+int ks_history_init(size_t capacity);
 
 /**
  * @brief Append a command line to the history buffer.

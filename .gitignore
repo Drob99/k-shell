@@ -5,6 +5,7 @@ kshell
 kshell-asan
 tests/test_parser
 tests/test_builtins
+tests/test_history
 
 # macOS debug symbols
 *.dSYM/
