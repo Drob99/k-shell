@@ -10,5 +10,5 @@ int ks_dispatch(int argc, char **argv) {
     if (strcmp(argv[0], "exit") == 0) return ks_builtin_exit(argc, argv);
     if (strcmp(argv[0], "help") == 0) return ks_builtin_help(argc, argv);
 
-    return KS_CMD_NOT_FOUND;
+    return ks_execute(argv);
 }

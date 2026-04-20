@@ -13,6 +13,7 @@
 #define KS_ERR_HISTORY       -4
 #define KS_ERR_TOO_MANY_ARGS -5
 #define KS_CMD_NOT_FOUND     -6
+#define KS_ERR_FORK          -7
 /* KS_EXIT is a positive sentinel, not an error: signals clean shell termination. */
 #define KS_EXIT               1
 
@@ -58,9 +59,10 @@ int ks_parse_line(char *line, char **argv, int *argc);
  * @param argv  NULL-terminated argument vector; argv[0] is the command name.
  * @return KS_OK if the command succeeded or input was empty;
  *         KS_EXIT if the built-in signals clean shell termination;
- *         KS_CMD_NOT_FOUND if argv[0] is not a known built-in;
+ *         KS_CMD_NOT_FOUND if argv[0] is not a known command (reserved);
  *         KS_ERR_BUILTIN if a built-in reports a usage or runtime error;
- *         KS_ERR_TOO_MANY_ARGS if argument limits were exceeded.
+ *         KS_ERR_TOO_MANY_ARGS if argument limits were exceeded;
+ *         KS_ERR_FORK if fork() failed when launching an external command.
  * @note Does not free argv; ownership remains with the caller.
  */
 int ks_dispatch(int argc, char **argv);
