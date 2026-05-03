@@ -1,13 +1,14 @@
 # K-Shell
 
-K-Shell is a lightweight, POSIX-compliant Unix shell written in C11, developed as a course project for ICS 433 (Operating Systems) at KFUPM, Semester 252. It implements a read-eval-print loop with a dynamic prompt showing the current working directory, four built-in commands, external command execution via `fork`/`execvp`/`waitpid`, an in-memory ring-buffer command history with consecutive-duplicate suppression, and SIGINT handling that keeps the shell alive while terminating the foreground child process.
+K-Shell is a lightweight, POSIX-compliant Unix shell written in C11, developed as a course project for ICS 433 (Operating Systems) at KFUPM, Semester 252. It implements a read-eval-print loop with a dynamic prompt showing the current working directory, four built-in commands, external command execution via `fork`/`execvp`/`waitpid`, an in-memory ring-buffer command history with consecutive-duplicate suppression, SIGINT handling that keeps the shell alive while terminating the foreground child process, and an embedded OS-introspection mode (`--inspect`) that turns every external command into a kernel-eye-view report.
 
 ## Build
 
 ```
 make          # build ./kshell
-make test     # build and run all unit tests (parser, builtins, history)
+make test     # build and run all 32 unit tests (parser, builtins, history, introspect)
 make asan     # build ./kshell-asan with AddressSanitizer (-fsanitize=address)
+make bench    # build and run the fork+exec round-trip latency benchmark
 make clean    # remove all build artifacts
 ```
 
@@ -45,6 +46,31 @@ kshell:~$ ls -la
 kshell:~$ grep -r "main" src/
 kshell:~$ /usr/bin/python3 script.py
 ```
+
+## `--inspect` (OS Introspection Mode)
+
+Add `--inspect` anywhere in the argv of an external command and K-Shell prints a kernel-eye-view report after the child finishes: per-child rusage (user/sys CPU, max RSS, page faults, context switches, FS I/O), wall-clock time, the inherited file descriptors at exec time, and the decoded child exit status. The instrumented path uses `wait4` for per-child rusage and `/dev/fd` enumeration in the child between fork and exec; the default path (no flag) is byte-for-byte unchanged.
+
+```
+kshell:~$ ls --inspect
+PHASE3_PLAN.md  README.md  include  kshell  Makefile  report  src  tests
+  ----- kshell --inspect ------------------------------
+   wall-clock          :       7169 us
+   user CPU time       :       1896 us
+   system CPU time     :       2548 us
+   max RSS             :       5840 KB
+   minor page faults   :        526
+   major page faults   :         19
+   vol. ctx switches   :          4
+   invol. ctx switches :         24
+   FS block reads      :          0
+   FS block writes     :          0
+   child exit status   :          0
+   inherited FDs       : 0 1 2
+  -----------------------------------------------------
+```
+
+`--inspect` is silently ignored on built-in commands (they don't fork).
 
 ## Not Supported
 

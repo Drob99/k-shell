@@ -6,6 +6,8 @@ kshell-asan
 tests/test_parser
 tests/test_builtins
 tests/test_history
+tests/test_introspect
+bench/bench_fork_exec
 
 # macOS debug symbols
 *.dSYM/
