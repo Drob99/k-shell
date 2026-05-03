@@ -47,3 +47,4 @@ bench:
 
 clean:
 	rm -f src/*.o $(TARGET) $(TARGET_ASAN) $(TEST_BIN) $(TEST_BUILTINS_BIN) $(TEST_HISTORY_BIN) $(TEST_INTROSPECT_BIN) $(BENCH_BIN)
+	rm -rf *.dSYM tests/*.dSYM bench/*.dSYM
