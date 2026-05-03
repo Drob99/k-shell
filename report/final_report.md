@@ -8,7 +8,6 @@ author:
   - "Osama Alkarnawi (202183150)"
 date: "May 2026"
 subject: "ICS 433 --- Operating Systems, KFUPM, Semester 252"
-keywords: [K-Shell, POSIX, Unix shell, operating systems, fork, execvp, getrusage, /dev/fd, C11]
 lang: "en"
 titlepage: true
 titlepage-color: "1F2933"
@@ -110,6 +109,8 @@ Each `src/*.c` file is a self-contained module with one responsibility. The cont
 
 ## Tools and Technologies
 
+Table: Toolchain versions used for the K-Shell Phase 3 final delivery.
+
 | Component | Tool / Version |
 |---|---|
 | Programming language | C11 (`-std=c11`) |
@@ -119,14 +120,12 @@ Each `src/*.c` file is a self-contained module with one responsibility. The cont
 | Test framework | Hand-rolled (no third-party dependency) |
 | Operating system | macOS 26.3 (Darwin 25.3.0), Apple Silicon (ARM64) |
 | Standard library | POSIX libc (`<unistd.h>`, `<sys/wait.h>`, `<sys/resource.h>`, `<dirent.h>`, `<signal.h>`) |
-| Report typesetter | Pandoc 3.9.0.2 + Eisvogel template |
+| Report typesetter | Pandoc 3.9.0.2 |
 | Report engine | XeTeX (TeX Live 2025) |
-| Diagrams | Hand-authored PNG via Python + Pillow + Matplotlib |
+| Diagrams | Hand-authored PNG via Python + Matplotlib + Pillow |
 | Version control | Git, branched workflow (Phase 3 integrated on `phase3` then merged to `main`) |
 
 K-Shell uses **no external libraries beyond libc and POSIX**. There are no third-party dependencies, no autoconf, no CMake. The entire build is one `Makefile` invoking one `cc`.
-
-Table: Toolchain versions used for the K-Shell Phase 3 final delivery.
 
 ## Embedded OS Introspection (`--inspect`)
 
@@ -145,9 +144,9 @@ The instrumented path differs from the plain path in four places:
 
 ### What the User Sees
 
-Figure 7 shows three commands run with `--inspect`: `ls --inspect`, `sleep --inspect 0.05`, and the failure path `foobar --inspect`. The kernel reports user CPU, system CPU, max RSS (normalized to KB on both Darwin and Linux), minor and major page faults, voluntary and involuntary context switches, FS block reads/writes, the decoded child exit status (127 for the not-found case, following the bash convention), and the inherited file descriptors (always `0 1 2` --- stdin, stdout, stderr --- in this shell because we don't yet do redirection).
+The `--inspect` screenshot in §5.2 shows three commands run with `--inspect`: `ls --inspect`, `sleep --inspect 0.05`, and the failure path `foobar --inspect`. The kernel reports user CPU, system CPU, max RSS (normalized to KB on both Darwin and Linux), minor and major page faults, voluntary and involuntary context switches, FS block reads/writes, the decoded child exit status (127 for the not-found case, following the bash convention), and the inherited file descriptors (always `0 1 2` --- stdin, stdout, stderr --- in this shell because we don't yet do redirection).
 
-![Figure 7 --- The `--inspect` mode in three example sessions: a successful `ls`, a 50 ms `sleep`, and a command-not-found path. The kernel reports per-child rusage, wall-clock, FD inheritance, and decoded exit status.](screenshots/07_inspect_mode.png)
+![The `--inspect` mode in three example sessions: a successful `ls`, a 50 ms `sleep`, and a command-not-found path. The kernel reports per-child rusage, wall-clock, FD inheritance, and decoded exit status.](screenshots/07_inspect_mode.png)
 
 ### Why This Is the Novel Contribution
 
@@ -204,23 +203,23 @@ Table: Complete unit-test inventory. All tests pass with zero warnings under `-s
 
 The screenshots below demonstrate the system end-to-end. All were captured on the development machine (macOS 26.3, Apple Silicon, Apple clang 17).
 
-![Figure 1 --- `make clean && make` completes with zero warnings and zero errors under `-std=c11 -Wall -Wextra -Wpedantic -Werror -g -O0`. All eight source files compile and link to produce `./kshell`.](screenshots/01_build_clean.png)
+![`make clean && make` completes with zero warnings and zero errors under `-std=c11 -Wall -Wextra -Wpedantic -Werror -g -O0`. All eight source files compile and link to produce `./kshell`.](screenshots/01_build_clean.png)
 
-![Figure 2 --- `make test` compiles and runs all four test drivers. Each driver prints its individual `PASS:` lines followed by `OK: 0 test(s) failed.`. The `&&` chaining in the Makefile ensures any failure stops the run.](screenshots/02_tests_pass.png)
+![`make test` compiles and runs all four test drivers. Each driver prints its individual `PASS:` lines followed by `OK: 0 test(s) failed.`. The `&&` chaining in the Makefile ensures any failure stops the run.](screenshots/02_tests_pass.png)
 
-![Figure 3a --- Interactive session: help output and cd /tmp.](screenshots/03a_features_history.png)
+![Interactive session: help output and `cd /tmp`.](screenshots/03a_features_history.png)
 
-![Figure 3b --- Interactive session: ls in /tmp and cd back to home.](screenshots/03b_features_history.png)
+![Interactive session: `ls` in `/tmp` and `cd` back to home.](screenshots/03b_features_history.png)
 
-![Figure 3c --- Interactive session: history output showing the numbered log of commands.](screenshots/03c_features_history.png)
+![Interactive session: `history` output showing the numbered log of commands.](screenshots/03c_features_history.png)
 
-![Figure 4 --- Error handling: `cd a b` (too many arguments), `cd /does/not/exist` (chdir failure), and `nosuchcommand` (execvp ENOENT). All three error paths re-prompt cleanly.](screenshots/04_error_handling.png)
+![Error handling: `cd a b` (too many arguments), `cd /does/not/exist` (chdir failure), and `nosuchcommand` (execvp ENOENT). All three error paths re-prompt cleanly.](screenshots/04_error_handling.png)
 
-![Figure 5 --- SIGINT handling: Ctrl+C interrupts partial input and re-prompts; Ctrl+C during `sleep 30` kills the child and re-prompts. The shell survives both because `sigaction` installs a handler with `sa_flags = 0` and the handler uses async-signal-safe `write(2)`.](screenshots/05_sigint_survives.png)
+![SIGINT handling: Ctrl+C interrupts partial input and re-prompts; Ctrl+C during `sleep 30` kills the child and re-prompts. The shell survives both because `sigaction` installs a handler with `sa_flags = 0` and the handler uses async-signal-safe `write(2)`.](screenshots/05_sigint_survives.png)
 
-![Figure 6a --- AddressSanitizer session including built-ins, externals, and `--inspect`.](screenshots/06a_asan_clean.png)
+![AddressSanitizer session including built-ins, externals, and `--inspect`.](screenshots/06a_asan_clean.png)
 
-![Figure 6b --- AddressSanitizer session: clean exit with zero leaks reported.](screenshots/06b_asan_clean.png)
+![AddressSanitizer session: clean exit with zero leaks reported.](screenshots/06b_asan_clean.png)
 
 # Performance Analysis
 
@@ -259,7 +258,7 @@ The not-found case is instructive: `35 µs` of user CPU is the entire cost of th
 
 ## Memory Safety
 
-Zero heap leaks and zero use-after-free reported by AddressSanitizer (`clang -fsanitize=address -g -O1`, macOS Apple Silicon, ARM64) across all built-in commands, external commands, the `--inspect` path, the 65-argument overflow path, and the >1023-character truncation path. Note: Valgrind was not used because it does not support ARM64 macOS; AddressSanitizer is the standard alternative for this platform. Evidence in Figures 6a--6b.
+Zero heap leaks and zero use-after-free reported by AddressSanitizer (`clang -fsanitize=address -g -O1`, macOS Apple Silicon, ARM64) across all built-in commands, external commands, the `--inspect` path, the 65-argument overflow path, and the >1023-character truncation path. Note: Valgrind was not used because it does not support ARM64 macOS; AddressSanitizer is the standard alternative for this platform. Evidence in the AddressSanitizer screenshots in §5.2.
 
 ## Process Integrity
 
@@ -267,7 +266,7 @@ Zero zombie processes under normal operation. Every child spawned by `ks_execute
 
 ## Build Hygiene
 
-Zero compiler warnings under `-std=c11 -Wall -Wextra -Wpedantic -Werror -g -O0` across all eight source files. Evidence: Figure 1.
+Zero compiler warnings under `-std=c11 -Wall -Wextra -Wpedantic -Werror -g -O0` across all eight source files. Evidence in the build screenshot in §5.2.
 
 # Challenges and Solutions
 
