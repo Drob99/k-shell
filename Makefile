@@ -18,7 +18,10 @@ TEST_HISTORY_BIN  := tests/test_history
 TEST_INTROSPECT_SRC := tests/test_introspect.c
 TEST_INTROSPECT_BIN := tests/test_introspect
 
-.PHONY: all test asan clean
+BENCH_SRC := bench/bench_fork_exec.c
+BENCH_BIN := bench/bench_fork_exec
+
+.PHONY: all test asan bench clean
 
 all: $(TARGET)
 
@@ -38,5 +41,9 @@ test:
 	$(CC) $(CFLAGS) -Iinclude -o $(TEST_INTROSPECT_BIN) $(TEST_INTROSPECT_SRC) $(LIB_SRCS)
 	./$(TEST_BIN) && ./$(TEST_BUILTINS_BIN) && ./$(TEST_HISTORY_BIN) && ./$(TEST_INTROSPECT_BIN)
 
+bench:
+	$(CC) -std=c11 -O2 -o $(BENCH_BIN) $(BENCH_SRC)
+	./$(BENCH_BIN)
+
 clean:
-	rm -f src/*.o $(TARGET) $(TARGET_ASAN) $(TEST_BIN) $(TEST_BUILTINS_BIN) $(TEST_HISTORY_BIN) $(TEST_INTROSPECT_BIN)
+	rm -f src/*.o $(TARGET) $(TARGET_ASAN) $(TEST_BIN) $(TEST_BUILTINS_BIN) $(TEST_HISTORY_BIN) $(TEST_INTROSPECT_BIN) $(BENCH_BIN)
