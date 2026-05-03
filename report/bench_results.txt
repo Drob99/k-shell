@@ -1,0 +1,12 @@
+cc -std=c11 -O2 -o bench/bench_fork_exec bench/bench_fork_exec.c
+./bench/bench_fork_exec
+fork + execvp(/usr/bin/true) + waitpid — 1000 iterations
+------------------------------------------------------
+  iterations completed : 1000 (failures: 0)
+  mean latency         :      938.4 us
+  p50                  :        919 us
+  p99                  :       1154 us
+  min                  :        830 us
+  max                  :       1755 us
+------------------------------------------------------
+system: macOS / Apple Silicon (Darwin 25.x), CC=clang -O2
