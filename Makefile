@@ -15,6 +15,8 @@ TEST_BUILTINS_SRC := tests/test_builtins.c
 TEST_BUILTINS_BIN := tests/test_builtins
 TEST_HISTORY_SRC  := tests/test_history.c
 TEST_HISTORY_BIN  := tests/test_history
+TEST_INTROSPECT_SRC := tests/test_introspect.c
+TEST_INTROSPECT_BIN := tests/test_introspect
 
 .PHONY: all test asan clean
 
@@ -33,7 +35,8 @@ test:
 	$(CC) $(CFLAGS) -Iinclude -o $(TEST_BIN) $(TEST_SRC) $(LIB_SRCS)
 	$(CC) $(CFLAGS) -Iinclude -o $(TEST_BUILTINS_BIN) $(TEST_BUILTINS_SRC) $(LIB_SRCS)
 	$(CC) $(CFLAGS) -Iinclude -o $(TEST_HISTORY_BIN) $(TEST_HISTORY_SRC) $(LIB_SRCS)
-	./$(TEST_BIN) && ./$(TEST_BUILTINS_BIN) && ./$(TEST_HISTORY_BIN)
+	$(CC) $(CFLAGS) -Iinclude -o $(TEST_INTROSPECT_BIN) $(TEST_INTROSPECT_SRC) $(LIB_SRCS)
+	./$(TEST_BIN) && ./$(TEST_BUILTINS_BIN) && ./$(TEST_HISTORY_BIN) && ./$(TEST_INTROSPECT_BIN)
 
 clean:
-	rm -f src/*.o $(TARGET) $(TARGET_ASAN) $(TEST_BIN) $(TEST_BUILTINS_BIN) $(TEST_HISTORY_BIN)
+	rm -f src/*.o $(TARGET) $(TARGET_ASAN) $(TEST_BIN) $(TEST_BUILTINS_BIN) $(TEST_HISTORY_BIN) $(TEST_INTROSPECT_BIN)
