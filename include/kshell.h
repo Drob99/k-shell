@@ -196,6 +196,96 @@ int ks_history_count(void);
 void ks_history_free(void);
 
 /* --------------------------------------------------------------------------
+ * introspect.c
+ *
+ * Embedded OS-introspection mode (--inspect flag). Captures a kernel-eye
+ * view of every external command: getrusage deltas (CPU, memory, page
+ * faults, context switches, FS I/O), wall-clock time, inherited FDs
+ * (snapshotted via /dev/fd in the child between fork and exec), and
+ * child exit status. Default execution path (no --inspect) is byte-for-
+ * byte unchanged.
+ * -------------------------------------------------------------------------- */
+
+struct rusage; /* forward decl; <sys/resource.h> needed by callers */
+
+#define KS_INSPECT_FD_BUF   512   /* upper bound on the FD-list buffer  */
+#define KS_INSPECT_OUT_BUF 2048   /* upper bound on the formatted table */
+
+/**
+ * @brief Set/clear the global "inspect this command" flag.
+ *
+ * The dispatcher calls this when it strips a "--inspect" token from
+ * argv. The executor reads it on entry to decide whether to take the
+ * instrumented path.
+ *
+ * @param enabled  Non-zero to enable for the next ks_execute call.
+ * @note Cleared automatically by ks_execute after consumption.
+ */
+void ks_introspect_set(int enabled);
+
+/**
+ * @brief Return whether inspect mode is enabled (and clear the flag).
+ *
+ * @return 1 if enabled (single-shot), 0 otherwise.
+ */
+int ks_introspect_consume(void);
+
+/**
+ * @brief Strip every "--inspect" token from argv in-place.
+ *
+ * Compacts the array, decrements *argc accordingly, and sets the
+ * inspect flag if any tokens were stripped. Maintains the
+ * argv[*argc] == NULL invariant required by execvp.
+ *
+ * @param argc  In/out argument count.
+ * @param argv  In/out NULL-terminated argument vector.
+ * @return Number of tokens stripped (0 or more).
+ */
+int ks_introspect_strip(int *argc, char **argv);
+
+/**
+ * @brief Child-side: snapshot inherited FDs to the pipe write end.
+ *
+ * Called after fork, before execvp. Enumerates /dev/fd, filters out
+ * the pipe FD itself and the directory's own descriptor, and writes
+ * the remaining FD numbers (space-separated) to @p pipe_write_fd.
+ * Always closes @p pipe_write_fd before returning.
+ *
+ * @param pipe_write_fd  Write end of an open pipe (consumed/closed).
+ */
+void ks_introspect_child_snapshot(int pipe_write_fd);
+
+/**
+ * @brief Parent-side: read child's FD snapshot from the pipe.
+ *
+ * @param pipe_read_fd  Read end of the pipe (consumed/closed).
+ * @param fd_buf        Output buffer for the FD-list string.
+ * @param fd_buflen     Size of @p fd_buf in bytes (must be > 0).
+ * @return KS_OK on success, KS_ERR_PARSE if buf is NULL or buflen is 0,
+ *         KS_ERR_EXEC on read failure.
+ */
+int ks_introspect_read_fds(int pipe_read_fd, char *fd_buf, size_t fd_buflen);
+
+/**
+ * @brief Format a kernel-eye-view table from rusage delta + metadata.
+ *
+ * @param delta         Rusage delta (post − pre wait4 sample).
+ * @param wallclock_us  Measured wall-clock in microseconds.
+ * @param exit_status   Child exit status (decoded; 128+sig if signalled).
+ * @param fd_list       NUL-terminated string of inherited FDs (may be empty).
+ * @param out_buf       Destination buffer for the rendered table.
+ * @param buflen        Size of @p out_buf in bytes.
+ * @return KS_OK on success, KS_ERR_PARSE on NULL args, KS_ERR_EXEC if
+ *         the formatted output would not fit in @p out_buf.
+ */
+int ks_introspect_format(const struct rusage *delta,
+                         long wallclock_us,
+                         int exit_status,
+                         const char *fd_list,
+                         char *out_buf,
+                         size_t buflen);
+
+/* --------------------------------------------------------------------------
  * prompt.c
  * -------------------------------------------------------------------------- */
 
