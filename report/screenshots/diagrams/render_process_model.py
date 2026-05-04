@@ -97,11 +97,13 @@ def main():
     event(ax, px, 10.4, "ks_dispatch -> ks_execute", fc=SAND)
     event(ax, px, 9.6,  "fork()", fc=LIGHT, ec=TEAL)
 
-    a = FancyArrowPatch((px + 0.6, 9.6), (cx - 0.6, 9.0),
+    # Arrows attach to BOX EDGES (px ± 1.35, cx ± 1.35) so the arrowhead
+    # lands just outside the rounded boxes, not inside them.
+    a = FancyArrowPatch((px + 1.35, 9.6), (cx - 1.35, 9.0),
                         arrowstyle="-|>", mutation_scale=12,
                         color=WARM, linewidth=1.4, zorder=2)
     ax.add_patch(a)
-    ax.text((px + cx) / 2, 9.45, "fork", fontsize=8, color=TEXT, ha="center")
+    ax.text((px + cx) / 2, 9.55, "fork", fontsize=8, color=TEXT, ha="center")
 
     event(ax, cx, 8.4, "execvp(argv[0], argv)", fc=LIGHT, ec=WARM)
     event(ax, cx, 7.5, "(child runs program)", fc="#FAF6EC", ec=GHOST)
@@ -109,16 +111,15 @@ def main():
 
     event(ax, px, 8.6, "waitpid(pid, &st, 0)", fc=LIGHT, ec=TEAL)
     event(ax, px, 7.5, "(blocked, EINTR retry)", fc="#FAF6EC", ec=GHOST)
-    event(ax, px, 6.3, "decode status -> exit code", fc=LIGHT, ec=TEAL)
+    event(ax, px, 5.9, "decode status -> exit code", fc=LIGHT, ec=TEAL)
 
-    a = FancyArrowPatch((cx - 0.6, 6.5), (px + 0.6, 6.3),
+    # Return arrow drops to a lower y so it doesn't cross the decode box.
+    a = FancyArrowPatch((cx - 1.35, 6.4), (px + 1.35, 5.9),
                         arrowstyle="-|>", mutation_scale=12,
                         color=ARROW, linewidth=1.2, zorder=2)
     ax.add_patch(a)
-    ax.text((px + cx) / 2, 6.45, "SIGCHLD + status",
-            fontsize=7.5, color=TEXT, ha="center")
 
-    event(ax, px, 5.0, "return KS_OK -> REPL", fc=SAND)
+    event(ax, px, 4.8, "return KS_OK -> REPL", fc=SAND)
 
     # ----------------------------------------------------------------------
     # RIGHT --- Instrumented --inspect path
@@ -143,10 +144,12 @@ def main():
     event(ax, pxR, 9.6,  "pipe(pipefd) + clock t0", fc=LIGHT, ec=TEAL)
 
     event(ax, pxR, 8.6,  "fork()", fc=LIGHT, ec=TEAL)
-    a = FancyArrowPatch((pxR + 0.6, 8.6), (cxR - 0.6, 9.0),
+    # fork arrow lands on the LEFT edge of the wider snapshot box (w=2.8 -> half=1.4)
+    a = FancyArrowPatch((pxR + 1.35, 8.6), (cxR - 1.4, 8.6),
                         arrowstyle="-|>", mutation_scale=12,
                         color=WARM, linewidth=1.4, zorder=2)
     ax.add_patch(a)
+    ax.text((pxR + cxR) / 2, 8.78, "fork", fontsize=8, color=TEXT, ha="center")
 
     event(ax, cxR, 8.6, "ks_introspect_child_snapshot", fc=LIGHT, ec=SAGE, w=2.8)
     event(ax, cxR, 7.7, "execvp(argv[0], argv)", fc=LIGHT, ec=WARM)
@@ -156,7 +159,8 @@ def main():
     event(ax, pxR, 7.6, "ks_introspect_read_fds", fc=LIGHT, ec=SAGE)
     event(ax, pxR, 6.6, "wait4(pid,&st,0,&rusage)", fc=LIGHT, ec=TEAL)
 
-    a = FancyArrowPatch((cxR - 0.6, 6.0), (pxR + 0.6, 6.6),
+    # Return arrow lands on the RIGHT edge of wait4 box at (pxR+1.35, 6.6).
+    a = FancyArrowPatch((cxR - 1.4, 6.0), (pxR + 1.35, 6.6),
                         arrowstyle="-|>", mutation_scale=12,
                         color=ARROW, linewidth=1.2, zorder=2)
     ax.add_patch(a)

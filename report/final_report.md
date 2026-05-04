@@ -164,8 +164,8 @@ The complete test suite is 32 tests across four drivers, all green under `-Werro
 
 Table: Complete unit-test inventory. All tests pass with zero warnings under `-std=c11 -Wall -Wextra -Wpedantic -Werror -g -O0`. Total runtime under 100 ms.
 
-| #  | Test                                       | Module     | What it asserts                                                  | Result |
-|----|--------------------------------------------|------------|------------------------------------------------------------------|--------|
+| #  | Test                                              | Module        | What it asserts                                          | Result |
+|----|---------------------------------------------------|---------------|----------------------------------------------------------|--------|
 | 1  | parse_simple                               | parser     | Single command tokenizes correctly                               | PASS   |
 | 2  | parse_multiple_args                        | parser     | Multi-token command splits on whitespace                         | PASS   |
 | 3  | parse_empty                                | parser     | Empty input returns argc==0, no error                            | PASS   |
@@ -184,8 +184,8 @@ Table: Complete unit-test inventory. All tests pass with zero warnings under `-s
 | 16 | exit_too_many_args                         | builtins   | `exit 1 2` returns KS_ERR_BUILTIN, not KS_EXIT                   | PASS   |
 | 17 | history_init_twice                         | history    | Double init without free returns KS_ERR_HISTORY                  | PASS   |
 | 18 | history_add_and_get                        | history    | Round-trip stores and retrieves entries in insertion order       | PASS   |
-| 19 | history_empty_lines_skipped                | history    | Blank lines silently rejected                                    | PASS   |
-| 20 | history_consecutive_duplicates_skipped     | history    | Repeated identical command suppressed                            | PASS   |
+| 19 | history_empty_skipped                      | history    | Blank lines silently rejected                                    | PASS   |
+| 20 | history_consec_dup_skipped                 | history    | Repeated identical command suppressed                            | PASS   |
 | 21 | history_wraparound                         | history    | Capacity-3 buffer wraps cleanly on 5th add                       | PASS   |
 | 22 | history_get_out_of_range                   | history    | Index $\geq$ count returns NULL                                  | PASS   |
 | 23 | strip_single_inspect                       | introspect | `ls --inspect /tmp` strips one token, sets flag                  | PASS   |
