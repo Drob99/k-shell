@@ -22,12 +22,10 @@ asan_output*
 *.swo
 *~
 
-# local-only demo/study notes, not for submission
-CODE_WALKTHROUGH.md
-USAGE_DEMO.md
-
-# local AI assistant context, not for submission
-CLAUDE.md
+# Local-only notes and planning documents
+.local/
+*PLAN.md
+PHASE3_DIAGNOSIS.md
 
 # report build artifacts (Eisvogel template archive and extracted folder)
 report/eisvogel.tar.gz
