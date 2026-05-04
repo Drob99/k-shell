@@ -45,17 +45,17 @@ mainfontoptions: "Numbers=Lining"
 
 # Introduction
 
-K-Shell is a lightweight, POSIX-compliant Unix shell written in C11. It operates as a command-line interpreter between the user and the operating-system kernel: it reads a line of input, tokenizes it, routes the command to an appropriate handler (built-in or external executable), and repeats until the user exits. Beyond meeting every Phase 1 requirement (§1.1--1.4), the final delivery includes an *embedded OS-introspection mode* --- a `--inspect` modifier that turns every external command into a kernel-eye-view report on its own resource usage, file descriptors, and exit disposition. This is the feature that distinguishes K-Shell from a textbook fork/exec implementation, and is the focus of the novelty discussion in §4.3 and the performance analysis in §6.
+K-Shell is a lightweight, POSIX-compliant Unix shell written in C11. It operates as a command-line interpreter between the user and the operating-system kernel: it reads a line of input, tokenizes it, routes the command to an appropriate handler (built-in or external executable), and repeats until the user exits. Beyond meeting every requirement in the Phase 1 proposal §1.1--1.4, the final delivery includes an *embedded OS-introspection mode* --- a `--inspect` modifier that turns every external command into a kernel-eye-view report on its own resource usage, file descriptors, and exit disposition. This is the feature that distinguishes K-Shell from a textbook fork/exec implementation, and is the focus of the novelty discussion in §4.3 and the performance analysis in §6.
 
-The shell supports four built-in commands (`cd`, `exit`, `help`, `history`), external command execution via `fork`/`execvp`/`waitpid`, an in-memory ring-buffer command history, a dynamic prompt showing the current working directory, signal handling that survives Ctrl+C while terminating the foreground child, and the new `--inspect` introspection mode. The complete implementation is 1,170 lines of C11 across eight production source files, plus 367 lines of unit tests covering parser, built-ins, history, and introspection.
+The shell supports four built-in commands (`cd`, `exit`, `help`, `history`), external command execution via `fork`/`execvp`/`waitpid`, an in-memory ring-buffer command history, a dynamic prompt showing the current working directory, signal handling that survives Ctrl+C while terminating the foreground child, and the new `--inspect` introspection mode. The complete implementation is 619 lines of C11 across eight production source files plus 307 lines of public-API headers, with 574 lines of unit tests covering parser, built-ins, history, and introspection.
 
 # Problem Statement and Motivation
 
 A modern operating-systems curriculum spends most of its time on the *concepts* of process creation, scheduling, signal delivery, file descriptors, virtual memory, and IPC --- but a student rarely *touches* any of these directly. The shell is the one program where every undergraduate is forced to confront `fork`, `exec`, `wait`, `signal`, and `errno` simultaneously, in the order the kernel actually delivers them. Building a shell from scratch is therefore the most direct route from the textbook to the syscall.
 
-The problem this project solves is twofold. **First**, build a shell that meets the Phase 1 specification (§1.1--1.4) end-to-end with production-grade engineering: reentrant tokenization, EINTR-safe waiting, async-signal-safe handlers, parameterized lifecycle management, and zero-warning compilation under `-Wall -Wextra -Wpedantic -Werror`. **Second** --- and this is what separates K-Shell from a competent course shell --- *use the shell as a teaching surface*. When a student types `ls --inspect`, they should see, in the same terminal, both `ls`'s output *and* what `ls` cost the kernel: how many microseconds of user CPU, how many page faults, how many context switches, which file descriptors got inherited. The introspection mode collapses the gap between "fork+exec runs a program" and "fork+exec is a kernel transaction with measurable cost."
+The problem this project solves is twofold. **First**, build a shell that meets the Phase 1 proposal §1.1--1.4 end-to-end with production-grade engineering: reentrant tokenization, EINTR-safe waiting, async-signal-safe handlers, parameterized lifecycle management, and zero-warning compilation under `-Wall -Wextra -Wpedantic -Werror`. **Second** --- and this is what separates K-Shell from a competent course shell --- *use the shell as a teaching surface*. When a student types `ls --inspect`, they should see, in the same terminal, both `ls`'s output *and* what `ls` cost the kernel: how many microseconds of user CPU, how many page faults, how many context switches, which file descriptors got inherited. The introspection mode collapses the gap between "fork+exec runs a program" and "fork+exec is a kernel transaction with measurable cost."
 
-The motivation is therefore not just to write a shell; it is to write a shell whose every command is also a small operating-systems lesson. The §4.3 novelty discussion documents what we know is and is not standard in undergraduate course-shell projects, and why we believe `--inspect` is genuinely uncommon at this level.
+The motivation is therefore not just to write a shell; it is to write a shell whose every command is also a small operating-systems lesson. The §4.3 novelty discussion documents what we know is and is not standard in undergraduate course-shell projects, and why we believe `--inspect` is uncommon at this level.
 
 # System Design
 
@@ -114,7 +114,7 @@ Table: Toolchain versions used for the K-Shell Phase 3 final delivery.
 | Component | Tool / Version |
 |---|---|
 | Programming language | C11 (`-std=c11`) |
-| Compiler | Apple clang 17.0.0 (clang-1700.6.4.2) |
+| Compiler | Apple clang 21.0.0 (clang-2100.0.123.102) |
 | Build system | GNU Make 3.81 |
 | Memory checker | AddressSanitizer (`-fsanitize=address`) |
 | Test framework | Hand-rolled (no third-party dependency) |
@@ -150,7 +150,7 @@ The `--inspect` screenshot in §5.2 shows three commands run with `--inspect`: `
 
 ### Why This Is the Novel Contribution
 
-Course shells at the undergraduate level uniformly stop at "fork the child, exec, wait for the exit code, print the prompt." A shell that *instruments* every command --- exposing the per-child rusage, the FD inheritance, and the wall-clock cost in a single operator-readable table --- is genuinely uncommon at this level. The educational payoff is direct: a student running `ls --inspect` sees that `ls` causes ~500 minor page faults on a freshly-exec'd image (the dynamic linker mapping libc + libsystem), that voluntary context switches cluster around 1--4 (it does almost no blocking I/O), and that the FD set is exactly `0 1 2`. None of this is visible in a normal shell session, and we know of no other course-shell deliverable that surfaces it inline.
+Course shells at the undergraduate level typically stop at "fork the child, exec, wait for the exit code, print the prompt." A shell that *instruments* every command --- exposing the per-child rusage, the FD inheritance, and the wall-clock cost in a single operator-readable table --- is uncommon at this level. The educational payoff is direct: a student running `ls --inspect` sees that `ls` causes ~500 minor page faults on a freshly-exec'd image (the dynamic linker mapping libc + libsystem), that voluntary context switches cluster around 1--4 (it does almost no blocking I/O), and that the FD set is exactly `0 1 2`. None of this is visible in a normal shell session, and we are not aware of similar inline instrumentation in the standard course-shell pattern.
 
 ### Failure Mode Handling
 
@@ -166,26 +166,26 @@ Table: Complete unit-test inventory. All tests pass with zero warnings under `-s
 
 | #  | Test                                              | Module        | What it asserts                                          | Result |
 |----|---------------------------------------------------|---------------|----------------------------------------------------------|--------|
-| 1  | parse_simple                               | parser     | Single command tokenizes correctly                               | PASS   |
-| 2  | parse_multiple_args                        | parser     | Multi-token command splits on whitespace                         | PASS   |
-| 3  | parse_empty                                | parser     | Empty input returns argc==0, no error                            | PASS   |
-| 4  | parse_only_whitespace                      | parser     | Whitespace-only input returns argc==0                            | PASS   |
-| 5  | parse_mixed_delimiters                     | parser     | Tabs and spaces both treated as delimiters                       | PASS   |
-| 6  | parse_trailing_whitespace                  | parser     | Trailing whitespace does not introduce empty token               | PASS   |
-| 7  | parse_leading_whitespace                   | parser     | Leading whitespace skipped                                       | PASS   |
-| 8  | parse_exactly_max_args                     | parser     | KS_MAX_ARGS (64) tokens accepted, argv[64]==NULL                 | PASS   |
-| 9  | parse_too_many_args                        | parser     | 65th token returns KS_ERR_TOO_MANY_ARGS                          | PASS   |
-| 10 | parse_null_line                            | parser     | NULL line returns KS_ERR_PARSE                                   | PASS   |
-| 11 | parse_null_argv                            | parser     | NULL argv returns KS_ERR_PARSE                                   | PASS   |
-| 12 | parse_null_argc                            | parser     | NULL argc returns KS_ERR_PARSE                                   | PASS   |
+| 1  | single_token                               | parser     | Single command tokenizes correctly                               | PASS   |
+| 2  | two_tokens                                 | parser     | Multi-token command splits on whitespace                         | PASS   |
+| 3  | empty_string                               | parser     | Empty input returns argc==0, no error                            | PASS   |
+| 4  | whitespace_only                            | parser     | Whitespace-only input returns argc==0                            | PASS   |
+| 5  | mixed_spaces                               | parser     | Tabs and spaces both treated as delimiters                       | PASS   |
+| 6  | trailing_whitespace                        | parser     | Trailing whitespace does not introduce empty token               | PASS   |
+| 7  | leading_whitespace                         | parser     | Leading whitespace skipped                                       | PASS   |
+| 8  | exactly_max_args                           | parser     | KS_MAX_ARGS (64) tokens accepted, argv[64]==NULL                 | PASS   |
+| 9  | too_many_args                              | parser     | 65th token returns KS_ERR_TOO_MANY_ARGS                          | PASS   |
+| 10 | null_line                                  | parser     | NULL line returns KS_ERR_PARSE                                   | PASS   |
+| 11 | null_argv                                  | parser     | NULL argv returns KS_ERR_PARSE                                   | PASS   |
+| 12 | null_argc                                  | parser     | NULL argc returns KS_ERR_PARSE                                   | PASS   |
 | 13 | cd_too_many_args                           | builtins   | `cd a b` returns KS_ERR_BUILTIN                                  | PASS   |
 | 14 | exit_returns_exit_code                     | builtins   | `exit` returns KS_EXIT, code 0                                   | PASS   |
 | 15 | exit_with_code                             | builtins   | `exit 42` returns KS_EXIT, code 42                               | PASS   |
 | 16 | exit_too_many_args                         | builtins   | `exit 1 2` returns KS_ERR_BUILTIN, not KS_EXIT                   | PASS   |
 | 17 | history_init_twice                         | history    | Double init without free returns KS_ERR_HISTORY                  | PASS   |
 | 18 | history_add_and_get                        | history    | Round-trip stores and retrieves entries in insertion order       | PASS   |
-| 19 | history_empty_skipped                      | history    | Blank lines silently rejected                                    | PASS   |
-| 20 | history_consec_dup_skipped                 | history    | Repeated identical command suppressed                            | PASS   |
+| 19 | history_empty_lines_skipped                | history    | Blank lines silently rejected                                    | PASS   |
+| 20 | history_consecutive_duplicates_skipped     | history    | Repeated identical command suppressed                            | PASS   |
 | 21 | history_wraparound                         | history    | Capacity-3 buffer wraps cleanly on 5th add                       | PASS   |
 | 22 | history_get_out_of_range                   | history    | Index $\geq$ count returns NULL                                  | PASS   |
 | 23 | strip_single_inspect                       | introspect | `ls --inspect /tmp` strips one token, sets flag                  | PASS   |
@@ -201,7 +201,7 @@ Table: Complete unit-test inventory. All tests pass with zero warnings under `-s
 
 ## Output Demonstrations
 
-The screenshots below demonstrate the system end-to-end. All were captured on the development machine (macOS 26.3, Apple Silicon, Apple clang 17).
+The screenshots below demonstrate the system end-to-end. All were captured on the development machine (macOS 26.3, Apple Silicon, Apple clang 21).
 
 ![`make clean && make` completes with zero warnings and zero errors under `-std=c11 -Wall -Wextra -Wpedantic -Werror -g -O0`. All eight source files compile and link to produce `./kshell`.](screenshots/01_build_clean.png)
 
@@ -323,7 +323,7 @@ make bench      # build and run the fork+exec benchmark
 make clean      # remove all build artifacts
 ```
 
-Requires a C11 compiler (`cc`) and a POSIX environment. Tested on macOS 26.3 (Apple Silicon, Apple clang 17) and expected to build on Linux without modification.
+Requires a C11 compiler (`cc`) and a POSIX environment. Tested on macOS 26.3 (Apple Silicon, Apple clang 21) and expected to build on Linux without modification.
 
 ```
 ./kshell                      # interactive shell
